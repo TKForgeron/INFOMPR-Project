@@ -1,3 +1,19 @@
+# local test files
+ltest*
+
+# csv files
+*.csv
+
+# arff files
+*.arff
+
+# pcap files
+*.pcap
+*.pcapng
+
+# zip files
+*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
