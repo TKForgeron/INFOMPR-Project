@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from nn_layers import *
 import preprocess as pp
 
 NUM_FEATURES = pp.total_features()  # amount of fields in the input
@@ -11,86 +11,17 @@ NUM_LABELS = pp.total_labels()  # amount of tags in the output
 BACKTRACK = 10  # amount of flows to keep in history #TODO: tune this
 
 
-def create_gru_layer(
-    units,
-    kernel_initializer="glorot_uniform",
-    recurrent_initializer="orthogonal",
-    return_sequences=False,
-):
-    """Create a new GRU layer
-
-    Keyword arguments:
-    units -- Positive integer, dimensionality of the output space.
-    (kernel_initializer) -- Initializer for the kernel weights matrix, used for the linear transformation of the inputs. Default: glorot_uniform.
-    (recurrent_initializer) -- Initializer for the recurrent_kernel weights matrix, used for the linear transformation of the recurrent state. Default: orthogonal.
-    (return_sequences) -- Boolean. Whether to return the last output in the output sequence, or the full sequence. Default: False.
-    Note: more can be added if deemed necessary later on
-    """
-    return layers.GRU(
-        units,
-        # the following parameters are needed for cuDNNGRU support (using GPU)
-        activation="tanh",
-        recurrent_activation="sigmoid",
-        recurrent_dropout=0.0,
-        unroll=False,
-        use_bias=True,
-        reset_after=True,
-        # these parameters can be tuned
-        kernel_initializer=kernel_initializer,
-        recurrent_initializer=recurrent_initializer,
-        bias_initializer="zeros",
-        kernel_regularizer=None,
-        recurrent_regularizer=None,
-        bias_regularizer=None,
-        activity_regularizer=None,
-        kernel_constraint=None,
-        recurrent_constraint=None,
-        bias_constraint=None,
-        dropout=0.0,
-        return_sequences=return_sequences,
-        return_state=False,
-        go_backwards=False,
-        stateful=False,
-        time_major=False,
-    )
-
-
-def create_dense_layer(units):
-    """Create a new fully connected layer
-
-    Keyword arguments:
-    units -- Positive integer, dimensionality of the output space.
-    Note: more can be added if deemed necessary later on
-    """
-    return layers.Dense(
-        units,
-        activation=None,
-        use_bias=True,
-        kernel_initializer="glorot_uniform",
-        bias_initializer="zeros",
-        kernel_regularizer=None,
-        bias_regularizer=None,
-        activity_regularizer=None,
-        kernel_constraint=None,
-        bias_constraint=None,
-    )
-
-
-def create_softmax_layer():
-    """Create a new softmax layer"""
-    return layers.Softmax()
-
-
 # MODEL SETUP
 
-input_layer = keras.Input(shape=(BACKTRACK, NUM_FEATURES))
+input_layer = keras.Input(shape=(NUM_FEATURES))
+reshape = create_reshape_layer((NUM_FEATURES,), (NUM_FEATURES, 1))(input_layer)
 
-gru = create_gru_layer(NUM_FEATURES, return_sequences=False)(input_layer)
+gru = create_gru_layer(NUM_FEATURES, return_sequences=False)(reshape)
 dense = create_dense_layer(NUM_FEATURES)(gru)
 dense = create_dense_layer(NUM_LABELS)(dense)
 softmax = create_softmax_layer()(dense)
 
-model = keras.Model(inputs=gru, outputs=softmax)
+model = keras.Model(inputs=input_layer, outputs=softmax)
 model.summary()
 # keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
 
@@ -105,9 +36,10 @@ model.compile(
 )
 
 # TODO: tune parameters
-model.fit(x_train, t_train, batch_size=64, epochs=159, validation_data=(x_val, t_val))
+model.fit(x_train, t_train, batch_size=64, epochs=20, validation_data=(x_val, t_val))
 
 # MODEL TESTING
 test_scores = model.evaluate(x_test, t_test, verbose=2)
 print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
+print(model.predict(x_test))
