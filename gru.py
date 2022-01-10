@@ -4,11 +4,19 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import preprocess as pp
 
-NUM_FEATURES = 9 # amount of fields in the input
-NUM_TAGS = 2 # amount of tags in the output
+NUM_FEATURES = pp.total_features()  # amount of fields in the input
+NUM_LABELS = pp.total_labels()  # amount of tags in the output
+BACKTRACK = 10  # amount of flows to keep in history #TODO: tune this
 
-def create_gru_layer(units, kernel_initializer = 'glorot_uniform',recurrent_initializer='orthogonal',return_sequences=False):
+
+def create_gru_layer(
+    units,
+    kernel_initializer="glorot_uniform",
+    recurrent_initializer="orthogonal",
+    return_sequences=False,
+):
     """Create a new GRU layer
 
     Keyword arguments:
@@ -21,17 +29,16 @@ def create_gru_layer(units, kernel_initializer = 'glorot_uniform',recurrent_init
     return layers.GRU(
         units,
         # the following parameters are needed for cuDNNGRU support (using GPU)
-        activation='tanh',
-        recurrent_activation='sigmoid',
+        activation="tanh",
+        recurrent_activation="sigmoid",
         recurrent_dropout=0.0,
-        unroll = False,
+        unroll=False,
         use_bias=True,
         reset_after=True,
-        
         # these parameters can be tuned
         kernel_initializer=kernel_initializer,
         recurrent_initializer=recurrent_initializer,
-        bias_initializer='zeros',
+        bias_initializer="zeros",
         kernel_regularizer=None,
         recurrent_regularizer=None,
         bias_regularizer=None,
@@ -44,8 +51,9 @@ def create_gru_layer(units, kernel_initializer = 'glorot_uniform',recurrent_init
         return_state=False,
         go_backwards=False,
         stateful=False,
-        time_major=False
+        time_major=False,
     )
+
 
 def create_dense_layer(units):
     """Create a new fully connected layer
@@ -55,52 +63,49 @@ def create_dense_layer(units):
     Note: more can be added if deemed necessary later on
     """
     return layers.Dense(
-        units, 
-        activation=None, 
+        units,
+        activation=None,
         use_bias=True,
-        kernel_initializer='glorot_uniform',
-        bias_initializer='zeros', 
+        kernel_initializer="glorot_uniform",
+        bias_initializer="zeros",
         kernel_regularizer=None,
-        bias_regularizer=None, 
-        activity_regularizer=None, 
+        bias_regularizer=None,
+        activity_regularizer=None,
         kernel_constraint=None,
-        bias_constraint=None
+        bias_constraint=None,
     )
+
+
+def create_softmax_layer():
+    """Create a new softmax layer"""
+    return layers.Softmax()
+
 
 # MODEL SETUP
 
-input_layer = keras.Input(shape=(2, NUM_FEATURES))
-
-#  lstm_layer = keras.layers.LSTM(units, input_shape=(None, input_dim))
-
-# embed = layers.Embedding(input_dim=NUM_FEATURES, output_dim=NUM_FEATURES)(input_layer)
-# https://keras.io/api/layers/recurrent_layers/gru/
+input_layer = keras.Input(shape=(BACKTRACK, NUM_FEATURES))
 
 gru = create_gru_layer(NUM_FEATURES, return_sequences=False)(input_layer)
 dense = create_dense_layer(NUM_FEATURES)(gru)
-dense = create_dense_layer(2)(dense)
+dense = create_dense_layer(NUM_LABELS)(dense)
+softmax = create_softmax_layer()(dense)
 
-#print(dense)
-
-model = keras.Model(inputs=gru, outputs = dense)
+model = keras.Model(inputs=gru, outputs=softmax)
 model.summary()
-#keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
+# keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
 
 # MODEL TRAINING
-(x_train, t_train) = (np.array([1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9,  101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109]),np.array([(0,1),(0,1),(0,1),(0,1),(0,1),(0,1),(0,1),(0,1),(0,1), (1,0),(1,0),(1,0),(1,0),(1,0),(1,0),(1,0)]))
-(x_test, t_test) = (np.array([101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109, 101,102,103,104,105,106,107,108,109,  1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9, 1,2,3,4,5,6,7,8,9]),np.array([(1,0),(1,0),(1,0),(1,0),(1,0),(1,0), (0,1),(0,1),(0,1),(0,1),(0,1),(0,1),(0,1),(0,1),(0,1)]))
+x_train, x_test, t_train, t_test = pp.get_train_test_set()
 
-x_train = x_train.reshape(16, NUM_FEATURES).astype("float32") / 110
-x_test = x_test.reshape(15, NUM_FEATURES).astype("float32") / 110
-
-#TODO: set compiler variables
+# TODO: set compiler variables
 model.compile(
     loss=keras.losses.CategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.RMSprop(),
     metrics=["accuracy"],
 )
 
-model.fit(x_train, t_train, batch_size=8, epochs=2, validation_split=.5)
+# TODO: tune parameters
+model.fit(x_train, t_train, batch_size=64, epochs=159, validation_split=0.25)
 
 # MODEL TESTING
 test_scores = model.evaluate(x_test, t_test, verbose=2)
