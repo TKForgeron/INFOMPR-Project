@@ -95,7 +95,7 @@ model.summary()
 # keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
 
 # MODEL TRAINING
-x_train, x_test, t_train, t_test = pp.get_train_test_set()
+x_train, x_val, x_test, t_train, t_val, t_test = pp.get_train_validation_test_set()
 
 # TODO: set compiler variables
 model.compile(
@@ -105,7 +105,7 @@ model.compile(
 )
 
 # TODO: tune parameters
-model.fit(x_train, t_train, batch_size=64, epochs=159, validation_split=0.25)
+model.fit(x_train, t_train, batch_size=64, epochs=159, validation_data=(x_val, t_val))
 
 # MODEL TESTING
 test_scores = model.evaluate(x_test, t_test, verbose=2)
