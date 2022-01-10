@@ -37,10 +37,10 @@ def total_labels():
 # digits_test_scaled  = scaler.transform(digits_test)
 
 
-def get_train_test_set():
-    """Processes the data and splits it into a scaled train and test set. The seed used for the split is not random, so this gives sets that can be used for reproducable results.
+def get_train_validation_test_set():
+    """Processes the data and splits it into a scaled train, validation and test set. The seed used for the split is not random, so this gives sets that can be used for reproducable results.
 
-    Returns: (x_train, x_test, t_train, t_test), a tuple of scaled train and test data
+    Returns: (x_train, x_val, x_test, t_train, t_val, t_test), a tuple of scaled train and test data
     DO NOT MODIFY THIS CODE WITHOUT NOTIFYING THE REST OF THE GROUP
     """
 
@@ -73,12 +73,18 @@ def get_train_test_set():
     X = data.to_numpy()
     t = labels.to_numpy()
 
+    # Split test/validation and training set
     X = X.reshape(-1, total_features())
     x_train, x_test, t_train, t_test = train_test_split(
         X, t, test_size=0.33, random_state=42
     )
 
-    return (x_train, x_test, t_train, t_test)
+    # Split training and validation set, note test_size will be the (proportional) size of the validation set
+    x_train, x_val, t_train, t_val = train_test_split(
+        X, t, test_size=0.25, random_state=42
+    )
+
+    return (x_train, x_val, x_test, t_train, t_val, t_test)
 
 
 def _for_all_files(function):
