@@ -42,4 +42,3 @@ model.fit(x_train, t_train, batch_size=64, epochs=20, validation_data=(x_val, t_
 test_scores = model.evaluate(x_test, t_test, verbose=2)
 print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
-print(model.predict(x_test))
