@@ -25,13 +25,16 @@ def create_dense_layer(units):
 
 
 def create_reshape_layer(input_shape, target_shape):
-    """Create a new reshape layer"""
+    """Create a new reshape layer
+
+    Keyword arguments:
+    [name] -- String name of the layer."""
     return layers.Reshape(target_shape, input_shape=input_shape)
 
 
-def create_softmax_layer():
+def create_softmax_layer(name=None):
     """Create a new softmax layer"""
-    return layers.Softmax()
+    return layers.Softmax(name=name)
 
 
 ## CNN LAYERS

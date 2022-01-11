@@ -16,25 +16,19 @@ def total_features():
     """Returns the total number of features that will be in every csv file"""
     return (
         len(CSV_FEATURES)
-        + len(_get_distinct_types())
         # Note applications is not a feature, as this is what we try to find out!
     )
 
 
-def total_labels():
-    """Returns the total number of labels that will be in every csv file"""
-    return len(_get_distinct_applications())
+def labels():
+    """Returns the names and total number of labels that will be in every csv file
 
-
-# # Remove constant columns
-# for i in reversed(range (0, 784)):
-#     if min(digits_train[:,i]) == max(digits_train[:,i]):
-#         digits_train = np.delete(digits_train, i, 1)
-#         digits_test = np.delete(digits_test, i, 1)
-
-# scaler = StandardScaler()
-# digits_train_scaled = scaler.fit_transform(digits_train)
-# digits_test_scaled  = scaler.transform(digits_test)
+    Returns: [(name, length)]
+    """
+    return [
+        ("type", len(_get_distinct_types())),
+        ("name", len(_get_distinct_applications())),
+    ]
 
 
 def get_train_validation_test_set():
@@ -60,8 +54,11 @@ def get_train_validation_test_set():
 
     # Combine all files and split labels and data
     complete = pd.concat(frames)
-    labels = complete[_get_distinct_applications()]
-    data = complete.drop(_get_distinct_applications(), axis=1)
+    labelsName = complete[_get_distinct_applications()]
+    labelsType = complete[_get_distinct_types()]
+    data = complete.drop(_get_distinct_applications(), axis=1).drop(
+        _get_distinct_types(), axis=1
+    )
 
     # Scale all columns
     types = _get_distinct_types()
@@ -71,20 +68,37 @@ def get_train_validation_test_set():
 
     # Transform data to numpy
     X = data.to_numpy()
-    t = labels.to_numpy()
+    tName = labelsName.to_numpy()
+    tType = labelsType.to_numpy()
 
     # Split test/validation and training set
     X = X.reshape(-1, total_features())
-    x_train, x_test, t_train, t_test = train_test_split(
-        X, t, test_size=0.33, random_state=42
+    x_train, x_test, tName_train, tName_test = train_test_split(
+        X, tName, test_size=0.33, random_state=42
+    )
+    x_train, x_test, tType_train, tType_test = train_test_split(
+        X, tType, test_size=0.33, random_state=42
     )
 
     # Split training and validation set, note test_size will be the (proportional) size of the validation set
-    x_train, x_val, t_train, t_val = train_test_split(
+    X = x_train
+    t = tName_train
+    x_train, x_val, tName_train, tName_val = train_test_split(
+        X, t, test_size=0.25, random_state=42
+    )
+    t = tType_train
+    x_train, x_val, tType_train, tType_val = train_test_split(
         X, t, test_size=0.25, random_state=42
     )
 
-    return (x_train, x_val, x_test, t_train, t_val, t_test)
+    return (
+        x_train,
+        x_val,
+        x_test,
+        [tType_train, tName_train],
+        [tType_val, tName_val],
+        [tType_test, tName_test],
+    )
 
 
 def _for_all_files(function):

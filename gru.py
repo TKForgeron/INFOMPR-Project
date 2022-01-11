@@ -7,7 +7,7 @@ from nn_layers import *
 import preprocess as pp
 
 NUM_FEATURES = pp.total_features()  # amount of fields in the input
-NUM_LABELS = pp.total_labels()  # amount of tags in the output
+LABELS = pp.labels()  # All labels and their total items in them
 BACKTRACK = 10  # amount of flows to keep in history #TODO: tune this
 
 
@@ -18,10 +18,14 @@ reshape = create_reshape_layer((NUM_FEATURES,), (NUM_FEATURES, 1))(input_layer)
 
 gru = create_gru_layer(NUM_FEATURES, return_sequences=False)(reshape)
 dense = create_dense_layer(NUM_FEATURES)(gru)
-dense = create_dense_layer(NUM_LABELS)(dense)
-softmax = create_softmax_layer()(dense)
+outputs = []
+for label in LABELS:
+    name_output, num_outputs = label
+    dense2 = create_dense_layer(num_outputs)(dense)
+    softmax = create_softmax_layer(name="softmax_" + str(name_output))(dense2)
+    outputs.append(softmax)
 
-model = keras.Model(inputs=input_layer, outputs=softmax)
+model = keras.Model(inputs=input_layer, outputs=outputs)
 model.summary()
 # keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
 
@@ -39,6 +43,7 @@ model.compile(
 model.fit(x_train, t_train, batch_size=64, epochs=20, validation_data=(x_val, t_val))
 
 # MODEL TESTING
+test_metric_names = model.metrics_names
 test_scores = model.evaluate(x_test, t_test, verbose=2)
-print("Test loss:", test_scores[0])
-print("Test accuracy:", test_scores[1])
+for idx, score in enumerate(test_scores):
+    print(test_metric_names[idx], ": ", score)
