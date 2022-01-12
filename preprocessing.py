@@ -9,7 +9,7 @@ def add_label(
 
     file_names = [file for file in os.listdir(base_dir)]
     frames = []
-
+    # applicationType_applicationName_index[a | b].pcap_Flow.csv
     regex = re.compile("^(.*)_\d*.*\.pcap_Flow.*")
 
     for name in file_names:
