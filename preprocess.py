@@ -186,8 +186,7 @@ def _process_files():
         application_type = match.group(1)
         application_name = match.group(2)
         df = pd.read_csv(filename)[CSV_FEATURES]
-        # df["Label"] = application_type
-        # df["Application"] = application_name
+        df["VPN"] = 0 if "NonVPN".lower() in filename.lower() else 1
         encodeType(application_type, df)
         encodeName(application_name, df)
 
