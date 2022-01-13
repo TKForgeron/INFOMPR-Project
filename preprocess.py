@@ -60,7 +60,7 @@ def get_train_validation_test_set():
         _get_distinct_types(), axis=1
     )
 
-    # Scale all columns
+    # Scale all columns to standard deviation of 1 and mean of 0
     types = _get_distinct_types()
     for col in data.columns:
         if col not in types:
@@ -101,7 +101,7 @@ def get_train_validation_test_set():
     )
 
 
-def _for_all_files(function):
+def _for_all_files(function, BASE_DIR=BASE_DIR):
     """Goes through all files and folders in 'BASE_DIR' and and calls the given function on those files
 
     Keyword arguments:
