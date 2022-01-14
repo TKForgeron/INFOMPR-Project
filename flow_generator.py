@@ -1,11 +1,13 @@
 # The mini-flow generator
 
+from ftplib import error_perm
 import pandas as pd
 import datetime
 from preprocess import _for_all_files
 
-BASE_DIR_120s = "data/CSV"
-BASE_DIR_3s = "data/CSV-3s"
+BASE_DIR_120s = "data/120s5s"
+BASE_DIR_3s = "data/3s5s"
+SEQUENCE_LENGTH = 5
 
 # print(sec1, sec120)
 
@@ -23,12 +25,14 @@ def d2T(timestamp, duration):
 
 
 if __name__ == "__main__":
+    error_count = []
     gTotal = 0
     files = 0
+    gTotalList = []
 
     def process_file(filename, root, name, **kwargs):
         try:
-            global gTotal, files
+            global error_count, gTotal, files, gTotalList
             df120 = pd.read_csv(filename)
             df3 = pd.read_csv(filename.replace(BASE_DIR_120s, BASE_DIR_3s))
             files += len(df3)
@@ -87,12 +91,26 @@ if __name__ == "__main__":
                     ):
                         matched_js.add(j)
                         rowTotal += 1
-                if rowTotal >= 5:
-                    total += rowTotal
+                if rowTotal >= SEQUENCE_LENGTH:
+                    total += (
+                        rowTotal - SEQUENCE_LENGTH + 1
+                    )  # HET IS DUS WEL DIT, MAAR DAN HOEF JE JE EINDPERCENTAGE NIET MEER DOOR 5 TE DELEN
+            gTotalList.append(total)
             gTotal += total
             print(filename, ": ", total / len(df3))
-        except:
-            print("Error on file ", filename)
+        except Exception as e:
+            # print("Error on file: ", filename)
+            error_count.append(e)
+            print(e)
 
     _for_all_files(process_file, BASE_DIR_120s)
-    print(gTotal / files)
+
+    if all(error_count):
+        print(
+            f"{len(error_count)} files not processed due to '{str(error_count[0]).split(': ')[0]}...'"
+        )
+    else:
+        print(f"{len(error_count)} files not processed due to error")
+
+    print(f"Percentage of usable mini-flows: {gTotal / files *100}")
+    # print(gTotalList)

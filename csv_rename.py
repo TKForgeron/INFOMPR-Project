@@ -1,7 +1,7 @@
 from preprocess import _for_all_files
 from os import rename, path
 
-BASE_DIR = "data/rename"
+BASE_DIR = "data/3s5s"
 
 renameTable = [
     ("aim_chat_", "chat_aim_chat_"),
