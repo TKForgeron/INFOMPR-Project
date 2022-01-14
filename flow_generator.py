@@ -4,8 +4,8 @@ import pandas as pd
 import datetime
 from preprocess import _for_all_files
 
-BASE_DIR_120s = "data/CSV"
-BASE_DIR_3s = "data/CSV-3s"
+BASE_DIR_120s = "data/120s5s"
+BASE_DIR_3s = "data/3s5s"
 
 # print(sec1, sec120)
 
@@ -91,8 +91,9 @@ if __name__ == "__main__":
                     total += rowTotal
             gTotal += total
             print(filename, ": ", total / len(df3))
-        except:
-            print("Error on file ", filename)
+        except Exception as e:
+            # print("Error on file: ", filename)
+            print(e)
 
     _for_all_files(process_file, BASE_DIR_120s)
     print(gTotal / files)
