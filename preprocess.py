@@ -101,19 +101,32 @@ def get_train_validation_test_set():
     )
 
 
-def _for_all_files(function, BASE_DIR=BASE_DIR):
-    """Goes through all files and folders in 'BASE_DIR' and and calls the given function on those files
+def _for_all_files(function, BASE_DIR=BASE_DIR, kwargs={}, **passedkwargs):
+    """
+    !!! given '**passedkwargs' will be passed to given 'function'
+
+    Goes through all files and folders in 'BASE_DIR' and and calls the given function on those files
 
     Keyword arguments:
     function -- the function to run over all files
     """
+    function_outputs = {}
+
     for root, dirs, files in os.walk(BASE_DIR):
         for name in files:
             if name.endswith((".pcap_Flow.csv")):
                 filename = os.path.join(root, name)
-                function(
-                    root=root, dirs=dirs, files=files, name=name, filename=filename
+                func_output = function(
+                    root=root,
+                    dirs=dirs,
+                    files=files,
+                    name=name,
+                    filename=filename,
+                    **passedkwargs,
                 )
+                function_outputs[filename] = func_output
+
+    return function_outputs  # , residuals
 
 
 def _get_distinct_types():
