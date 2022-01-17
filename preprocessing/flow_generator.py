@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 import datetime
-from preprocess import (
+from preprocessing.preprocessing import (
     BASE_DIR_RENAMED,
     BASE_DIR_SEQUENCES,
     _for_all_files,

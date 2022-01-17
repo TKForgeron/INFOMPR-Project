@@ -1,4 +1,4 @@
-from preprocess import BASE_DIR_RENAMED, _for_all_files, BASE_DIR_RAW
+from preprocessing.preprocessing import BASE_DIR_RENAMED, _for_all_files, BASE_DIR_RAW
 from os import rename, path, makedirs
 
 renameTable = [
