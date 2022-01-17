@@ -133,32 +133,50 @@ if __name__ == "__main__":
             error_count.append(e)
             # print(e)
 
-            return [len(error_count), str(e).split(": ")[0] + "..."]
+            return [0, str(e).split(": ")[0] + "..."]
 
     SEQUENCE_LENGTH = 20
     STRIDE = SEQUENCE_LENGTH
-    error_count = []
-    gTotal = 0
-    files = 0
-    for stride in range(1, STRIDE + 1):
-        for sequence_length in range(3, SEQUENCE_LENGTH + 1):
-            print(
-                f"Now checking for sequence_length: {sequence_length} and stride: {stride}..."
-            )
-            output_dict = _for_all_files(
-                count_miniflows_per_file,
-                BASE_DIR_120s,
-                STRIDE=STRIDE,
-                SEQUENCE_LENGTH=SEQUENCE_LENGTH,
-                error_count=[],
-                gTotal=0,
-                files=0,
-            )
-            miniflow_counts_to_csv(
-                miniflows_dict=output_dict,
-                csv_out_name=f"results/sequence{SEQUENCE_LENGTH}_stride{STRIDE}_mini-flow_percentages.csv",
-                sep=";",
-            )
+    # error_count = []
+    # gTotal = 0
+    # files = 0
+    # for stride in range(1, STRIDE + 1):
+    #     for sequence_length in range(3, SEQUENCE_LENGTH + 1):
+    #         print(
+    #             f"Now checking for sequence_length: {sequence_length} and stride: {stride}..."
+    #         )
+    #         output_dict, error_count, perc_usable = _for_all_files(
+    #             count_miniflows_per_file,
+    #             BASE_DIR_120s,
+    #             STRIDE=STRIDE,
+    #             SEQUENCE_LENGTH=SEQUENCE_LENGTH,
+    #             error_count=[],
+    #             gTotal=0,
+    #             files=0,
+    #         )
+    #         miniflow_counts_to_csv(
+    #             miniflows_dict=output_dict,
+    #             csv_out_name=f"results/sequence{SEQUENCE_LENGTH}_stride{STRIDE}_{len(error_count)}errors_{perc_usable}%usable.csv",
+    #             sep=";",
+    #         )
+
+    print(
+        f"Now checking for sequence_length: {SEQUENCE_LENGTH} and stride: {STRIDE}..."
+    )
+    output_dict, error_count, perc_usable = _for_all_files(
+        count_miniflows_per_file,
+        BASE_DIR_120s,
+        STRIDE=STRIDE,
+        SEQUENCE_LENGTH=SEQUENCE_LENGTH,
+        error_count=[],
+        gTotal=0,
+        files=0,
+    )
+    miniflow_counts_to_csv(
+        miniflows_dict=output_dict,
+        csv_out_name=f"results/sequence{SEQUENCE_LENGTH}_stride{STRIDE}_{len(error_count)}errors_{perc_usable}%usable.csv",
+        sep=";",
+    )
 
     if all(error_count):
         print(

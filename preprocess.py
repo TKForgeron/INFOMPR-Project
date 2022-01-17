@@ -101,9 +101,9 @@ def get_train_validation_test_set():
     )
 
 
-def _for_all_files(function, BASE_DIR=BASE_DIR, **kwargs):
+def _for_all_files(function, BASE_DIR=BASE_DIR, kwargs={}, **passedkwargs):
     """
-    !!! given '**kwargs' will be passed to given 'function'
+    !!! given '**passedkwargs' will be passed to given 'function'
 
     Goes through all files and folders in 'BASE_DIR' and and calls the given function on those files
 
@@ -122,11 +122,11 @@ def _for_all_files(function, BASE_DIR=BASE_DIR, **kwargs):
                     files=files,
                     name=name,
                     filename=filename,
-                    **kwargs,
+                    **passedkwargs,
                 )
                 function_outputs[filename] = func_output
 
-    return function_outputs
+    return function_outputs  # , residuals
 
 
 def _get_distinct_types():
