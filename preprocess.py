@@ -1,21 +1,27 @@
 import pandas as pd
+import numpy as np
 import os
 import re
 
-BASE_DIR = "data/CSV/"
-BASE_DIR_PROCESSED = "data/CSV-Labelled/"
+BASE_DIR_RAW = "data/raw/"
+BASE_DIR_RENAMED = "data/renamed/"
+BASE_DIR_SEQUENCES = "data/sequences/"
+BASE_DIR_TAGGED = "data/tagged/"
+BASE_DIR_PROCESSED = "data/processed/"
 CSV_FEATURES = ["Src Port", "Dst Port", "Protocol"]
+SEQUENCE_LENGTH = 5
 
 regex = re.compile("^([^_]*)_(.*)_\d*(.*)\.pcap_Flow.csv")
 
 # File name format:
-# applicationType_applicationName_index[a | b].pcap_Flow.csv
+# applicationType_applicationName_[index][a | b].pcap_Flow.csv
 
 
 def total_features():
     """Returns the total number of features that will be in every csv file"""
     return (
         len(CSV_FEATURES)
+        + 1  # +1 for VPN
         # Note applications is not a feature, as this is what we try to find out!
     )
 
@@ -41,38 +47,36 @@ def get_train_validation_test_set():
     from sklearn.preprocessing import scale
     from sklearn.model_selection import train_test_split
 
-    _process_files()
-
     # Read in all files
     frames = []
 
     def process_file(filename, **kwargs):
-        df = pd.read_csv(BASE_DIR_PROCESSED + filename)
+        df = pd.read_csv(filename)
         frames.append(df)
 
-    _for_all_files(process_file)
+    _for_all_files(process_file, BASE_DIR_PROCESSED)
 
     # Combine all files and split labels and data
+    app_names = _get_distinct_applications(BASE_DIR_PROCESSED)
+    app_types = _get_distinct_types(BASE_DIR_PROCESSED)
     complete = pd.concat(frames)
-    labelsName = complete[_get_distinct_applications()]
-    labelsType = complete[_get_distinct_types()]
-    data = complete.drop(_get_distinct_applications(), axis=1).drop(
-        _get_distinct_types(), axis=1
-    )
+    labelsName = complete[app_names]
+    labelsType = complete[app_types]
+    data = complete.drop(app_names, axis=1).drop(app_types, axis=1)
 
     # Scale all columns to standard deviation of 1 and mean of 0
-    types = _get_distinct_types()
-    for col in data.columns:
-        if col not in types:
-            data[col] = scale(data[col])
+    for i in range(0, len(data.columns)):
+        if data.columns[i] is not "VPN":
+            data.iloc[:, i] = scale(data.iloc[:, i])
 
     # Transform data to numpy
     X = data.to_numpy()
     tName = labelsName.to_numpy()
     tType = labelsType.to_numpy()
+    print(data.columns)
 
     # Split test/validation and training set
-    X = X.reshape(-1, total_features())
+    # X = X.reshape((-1, total_features()))
     x_train, x_test, tName_train, tName_test = train_test_split(
         X, tName, test_size=0.33, random_state=42
     )
@@ -101,18 +105,19 @@ def get_train_validation_test_set():
     )
 
 
-def _for_all_files(function, BASE_DIR=BASE_DIR, kwargs={}, **passedkwargs):
+def _for_all_files(function, base_dir, kwargs={}, **passedkwargs):
     """
     !!! given '**passedkwargs' will be passed to given 'function'
 
-    Goes through all files and folders in 'BASE_DIR' and and calls the given function on those files
+    Goes through all files and folders in 'base_dir' and and calls the given function on those files
 
     Keyword arguments:
     function -- the function to run over all files
+    base_dir -- directory in which to walk over files
     """
     function_outputs = {}
 
-    for root, dirs, files in os.walk(BASE_DIR):
+    for root, dirs, files in os.walk(base_dir):
         for name in files:
             if name.endswith((".pcap_Flow.csv")):
                 filename = os.path.join(root, name)
@@ -129,10 +134,10 @@ def _for_all_files(function, BASE_DIR=BASE_DIR, kwargs={}, **passedkwargs):
     return function_outputs  # , residuals
 
 
-def _get_distinct_types():
-    """Goes through all files and folders in 'BASE_DIR' and returns a list of all distinct application types.
+def _get_distinct_types(base_dir=BASE_DIR_PROCESSED):
+    """Goes through all files and folders in 'base_dir' and returns a list of all distinct application types.
 
-    Make sure that all files conform to the format "applicationType_applicationName_index[a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
+    Make sure that all files conform to the format "applicationType_applicationName_[index][a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
 
     Returns: List of distinct types
     """
@@ -144,14 +149,14 @@ def _get_distinct_types():
         application_type = match.group(1)
         types.add(application_type)
 
-    _for_all_files(process_file)
+    _for_all_files(process_file, base_dir)
     return sorted(list(types))
 
 
-def _get_distinct_applications():
-    """Goes through all files and folders in 'BASE_DIR' and returns a list of all distinct application names.
+def _get_distinct_applications(base_dir=BASE_DIR_PROCESSED):
+    """Goes through all files and folders in 'base_dir' and returns a list of all distinct application names.
 
-    Make sure that all files conform to the format "applicationType_applicationName_index[a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
+    Make sure that all files conform to the format "applicationType_applicationName_[index][a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
 
     Returns: List of distinct names
     """
@@ -162,7 +167,7 @@ def _get_distinct_applications():
         application_name = match.group(2)
         names.add(application_name)
 
-    _for_all_files(process_file)
+    _for_all_files(process_file, base_dir)
     return sorted(list(names))
 
 
@@ -184,14 +189,15 @@ def _create_one_hot_encoders(distinct_types, distinct_names):
 
 
 def _process_files():
-    """Goes through all files and folders in 'BASE_DIR' and adds labels for the application type and application name to them.
+    """Goes through all files and folders in 'BASE_DIR_SEQUENCES' and adds labels for the application type and application name to them.
     Will also remove the features that are not required by the model.
 
-    Make sure that all files conform to the format "applicationType_applicationName_index[a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
+    Make sure that all files conform to the format "applicationType_applicationName_[index][a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
     """
 
     encodeType, encodeName = _create_one_hot_encoders(
-        _get_distinct_types(), _get_distinct_applications()
+        _get_distinct_types(BASE_DIR_SEQUENCES),
+        _get_distinct_applications(BASE_DIR_SEQUENCES),
     )
 
     def process_file(root, name, filename, **kwargs):
@@ -203,15 +209,63 @@ def _process_files():
         encodeType(application_type, df)
         encodeName(application_name, df)
 
-        if not os.path.exists(BASE_DIR_PROCESSED + root):
-            os.makedirs(BASE_DIR_PROCESSED + root)
-        df.to_csv(BASE_DIR_PROCESSED + filename, index=False)
+        out_dir = root.replace(BASE_DIR_SEQUENCES, BASE_DIR_TAGGED)
 
-    _for_all_files(process_file)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        df.to_csv(filename.replace(root, out_dir), index=False)
+
+    _for_all_files(process_file, BASE_DIR_SEQUENCES)
 
 
-if __name__ == "__main__":
-    distinct_types = _get_distinct_types()
-    distinct_applications = _get_distinct_applications()
-    print(distinct_types, distinct_applications)
-    _process_files()
+def _sequences_to_rows():
+    """Puts 5 rows that for one sequence into one row and writes it to csv in BASE_DIR_PROCESSED"""
+
+    application_names = _get_distinct_applications(BASE_DIR_TAGGED)
+    application_types = _get_distinct_types(BASE_DIR_TAGGED)
+
+    def process_file(root, filename, **kwargs):
+        df = pd.read_csv(filename)
+        df_nolabels = df.drop(application_names, axis=1).drop(application_types, axis=1)
+        new_columns = list(df_nolabels.columns) * SEQUENCE_LENGTH
+        out_root = root.replace(BASE_DIR_TAGGED, BASE_DIR_PROCESSED)
+        out_file = filename.replace(root, out_root)
+
+        if not os.path.exists(out_root):
+            os.makedirs(out_root)
+
+        if len(df > 0):
+            all_col_names = [*application_types, *application_names]
+            all_cols = df[all_col_names].to_numpy()
+            append_data = list(all_cols[0, :])
+
+            for typeName in application_types:
+                new_columns.append(typeName)
+            for appName in application_names:
+                new_columns.append(appName)
+
+            df_matrix = df_nolabels.to_numpy()
+            num_rows = int((len(df_matrix[:, 0]) / SEQUENCE_LENGTH))
+            df_matrix = df_matrix.reshape(
+                (
+                    num_rows,
+                    total_features() * SEQUENCE_LENGTH,
+                ),
+                order="C",
+            )
+            append_matrix = np.array((append_data * num_rows)).reshape(
+                num_rows, len(append_data), order="C"
+            )
+            with open(out_file, "w") as fd:
+                fd.write(",".join(new_columns) + "\n")
+                np.savetxt(
+                    fd,
+                    np.concatenate((df_matrix, append_matrix), axis=1),
+                    fmt="%s",
+                    delimiter=",",
+                )
+        else:
+            with open(out_file, "w") as fd:
+                fd.write(",".join(new_columns) + "\n")
+
+    _for_all_files(process_file, BASE_DIR_TAGGED)

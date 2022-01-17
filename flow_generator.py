@@ -1,16 +1,18 @@
 # The mini-flow generator
 
-from ftplib import error_perm
 import pandas as pd
 import numpy as np
 import datetime
-from preprocess import _for_all_files
+from preprocess import (
+    BASE_DIR_RENAMED,
+    BASE_DIR_SEQUENCES,
+    _for_all_files,
+    SEQUENCE_LENGTH,
+)
 from os import path, makedirs
 
-BASE_DIR_120s = "data/CSV"
-BASE_DIR_3s = "data/CSV-3s"
-BASE_DIR_sequences = "data/CSV-sequences/"
-SEQUENCE_LENGTH = 5
+DIR_120s = "120s5s/"
+DIR_3s = "3s5s/"
 
 # print(sec1, sec120)
 
@@ -36,16 +38,16 @@ def sequenceToRows(sequence):
     return output
 
 
-if __name__ == "__main__":
+def generate_flow_sequences():
     error_count = []
     gTotal = 0
     files = 0
 
     def process_file(filename, root, name, **kwargs):
         try:
-            global error_count, gTotal, files
+            nonlocal error_count, gTotal, files
             df120 = pd.read_csv(filename)
-            df3 = pd.read_csv(filename.replace(BASE_DIR_120s, BASE_DIR_3s))
+            df3 = pd.read_csv(filename.replace(DIR_120s, DIR_3s))
             files += len(df3)
             total = 0
             out_rows = []
@@ -91,10 +93,15 @@ if __name__ == "__main__":
             gTotal += total
             print(filename, ": ", total / len(df3))
             sequence_matrix = np.array([list(df3.columns), *(out_rows)])
-            if not path.exists(BASE_DIR_sequences + root):
-                makedirs(BASE_DIR_sequences + root)
+            out_root = root.replace(BASE_DIR_RENAMED, BASE_DIR_SEQUENCES).replace(
+                DIR_120s, ""
+            )
+            out_file = filename.replace(root, out_root)
+
+            if not path.exists(out_root):
+                makedirs(out_root)
             np.savetxt(
-                path.join(BASE_DIR_sequences, filename),
+                path.join(out_file),
                 sequence_matrix,
                 fmt="%s",
                 delimiter=",",
@@ -104,7 +111,7 @@ if __name__ == "__main__":
             error_count.append(e)
             print(e)
 
-    _for_all_files(process_file, BASE_DIR_120s)
+    _for_all_files(process_file, path.join(BASE_DIR_RENAMED, DIR_120s))
 
     if all(error_count):
         if len(error_count) == 0:
@@ -118,3 +125,7 @@ if __name__ == "__main__":
 
     print(f"Percentage of usable mini-flows: {gTotal / files *100}")
     # print(gTotalList)
+
+
+if __name__ == "__main__":
+    generate_flow_sequences()
