@@ -29,12 +29,12 @@ os.environ["PYTHONHASHSEED"] = "0"
 
 # MODEL SETUP
 
-input_layer = keras.Input(shape=(NUM_FEATURES))
-reshape = create_reshape_layer((NUM_FEATURES,), (1, NUM_FEATURES, 1))(
-    input_layer
-)  # Needs to be reshapen to the input shape of the conv layer
+input_layer = keras.Input(shape=(NUM_FEATURES * pp.SEQUENCE_LENGTH))
+reshape = create_reshape_layer(
+    (NUM_FEATURES * pp.SEQUENCE_LENGTH,), (NUM_FEATURES, pp.SEQUENCE_LENGTH, 1)
+)(input_layer)
 
-# TODO: tune the parameters of all layers below
+# TODO: tune the parameters of all layers below, note: include parameters from "Network Traffic Classifier With Convolutional and Recurrent Neural Networks for Internet of Things"
 conv = create_convolutional_layer(32, kernel_size=(1, 2))(
     reshape
 )  # data_format = channels_last corresponds to inputs with shape (batch_size, height, width, channels) while channels_first corresponds to inputs with shape (batch_size, channels, height, width)
@@ -54,7 +54,7 @@ for label in LABELS:
     outputs.append(softmax)
 
 model = keras.Model(inputs=input_layer, outputs=outputs)
-# model.summary()
+model.summary()
 # keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
 
 

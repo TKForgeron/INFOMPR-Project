@@ -5,16 +5,26 @@ import tensorflow as tf
 from tensorflow import keras
 from nn_layers import *
 import preprocess as pp
+import random as python_random
+import os
 
 NUM_FEATURES = pp.total_features()  # amount of fields in the input
 LABELS = pp.labels()  # All labels and their total items in them
-BACKTRACK = 10  # amount of flows to keep in history #TODO: tune this
+
+# BASIC SETUP
+
+tf.random.set_seed(42)
+np.random.seed(42)
+python_random.seed(42)
+os.environ["PYTHONHASHSEED"] = "0"
 
 
 # MODEL SETUP
 
-input_layer = keras.Input(shape=(NUM_FEATURES))
-reshape = create_reshape_layer((NUM_FEATURES,), (NUM_FEATURES, 1))(input_layer)
+input_layer = keras.Input(shape=(NUM_FEATURES * pp.SEQUENCE_LENGTH))
+reshape = create_reshape_layer(
+    (NUM_FEATURES * pp.SEQUENCE_LENGTH,), (NUM_FEATURES, pp.SEQUENCE_LENGTH)
+)(input_layer)
 
 gru = create_gru_layer(NUM_FEATURES, return_sequences=False)(reshape)
 dense = create_dense_layer(NUM_FEATURES)(gru)
