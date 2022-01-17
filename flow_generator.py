@@ -2,11 +2,14 @@
 
 from ftplib import error_perm
 import pandas as pd
+import numpy as np
 import datetime
 from preprocess import _for_all_files
+from os import path, makedirs
 
-BASE_DIR_120s = "data/120s5s"
-BASE_DIR_3s = "data/3s5s"
+BASE_DIR_120s = "data/CSV"
+BASE_DIR_3s = "data/CSV-3s"
+BASE_DIR_sequences = "data/CSV-sequences/"
 SEQUENCE_LENGTH = 5
 
 # print(sec1, sec120)
@@ -24,20 +27,28 @@ def d2T(timestamp, duration):
     return (timestamp120, endtime120)
 
 
+def sequenceToRows(sequence):
+    """Given an array of miniflows, outputs an array of sequenced miniflows, with stride=1."""
+    output = []
+    for i in range(0, len(sequence) - SEQUENCE_LENGTH + 1):
+        for j in range(i, i + SEQUENCE_LENGTH):
+            output.append(sequence[j])
+    return output
+
+
 if __name__ == "__main__":
     error_count = []
     gTotal = 0
     files = 0
-    gTotalList = []
 
     def process_file(filename, root, name, **kwargs):
         try:
-            global error_count, gTotal, files, gTotalList
+            global error_count, gTotal, files
             df120 = pd.read_csv(filename)
             df3 = pd.read_csv(filename.replace(BASE_DIR_120s, BASE_DIR_3s))
             files += len(df3)
             total = 0
-            matched_smallrows = {}
+            out_rows = []
             matched_js = set()
             df3["Start Time"] = 0
             df3["End Time"] = 0
@@ -57,31 +68,9 @@ if __name__ == "__main__":
                 starttime120, endtime120 = d2T(
                     df120["Timestamp"][i], df120["Flow Duration"][i]
                 )
+                miniflow_row_ids = []
 
                 for j in range(0, len(df3)):
-                    # starttime1, endtime1 = df3["Start Time"][j], df3["End Time"][j]
-                    # if starttime1 >= starttime120 and endtime1 <= endtime120:
-                    #     if df120["Protocol"][i] == df3["Protocol"][j]:
-                    #         if (
-                    #             # df120["Src Port"][i] == df3["Src Port"][j]
-                    #             # and df120["Dst Port"][i] == df3["Dst Port"][j]
-                    #             # and df120["Src IP"][i] == df3["Src IP"][j]
-                    #             # and df120["Dst IP"][i] == df3["Dst IP"][j]
-                    #             flow120
-                    #             == df3["Flow ID"][j]
-                    #             # and j not in matched_js
-                    #         ):
-                    #             rowTotal += 1
-                    #             # if j in matched_smallrows.keys():
-                    #             #     print(
-                    #             #         j,
-                    #             #         " (in ",
-                    #             #         i,
-                    #             #         ") already present for ",
-                    #             #         matched_smallrows[j],
-                    #             #     )
-                    #             # matched_smallrows[j] = i
-                    #             # matched_js.add(j)
                     starttime1, endtime1 = nf3[j, startIndex], nf3[j, endIndex]
                     if (
                         starttime1 >= starttime120
@@ -91,13 +80,25 @@ if __name__ == "__main__":
                     ):
                         matched_js.add(j)
                         rowTotal += 1
+                        miniflow_row_ids.append(j)
                 if rowTotal >= SEQUENCE_LENGTH:
                     total += (
                         rowTotal - SEQUENCE_LENGTH + 1
                     )  # HET IS DUS WEL DIT, MAAR DAN HOEF JE JE EINDPERCENTAGE NIET MEER DOOR 5 TE DELEN
-            gTotalList.append(total)
+                    rows_subset = [nf3[row, :] for row in miniflow_row_ids]
+                    for row in sequenceToRows(rows_subset):
+                        out_rows.append(row)
             gTotal += total
             print(filename, ": ", total / len(df3))
+            sequence_matrix = np.array([list(df3.columns), *(out_rows)])
+            if not path.exists(BASE_DIR_sequences + root):
+                makedirs(BASE_DIR_sequences + root)
+            np.savetxt(
+                path.join(BASE_DIR_sequences, filename),
+                sequence_matrix,
+                fmt="%s",
+                delimiter=",",
+            )
         except Exception as e:
             # print("Error on file: ", filename)
             error_count.append(e)
@@ -106,9 +107,12 @@ if __name__ == "__main__":
     _for_all_files(process_file, BASE_DIR_120s)
 
     if all(error_count):
-        print(
-            f"{len(error_count)} files not processed due to '{str(error_count[0]).split(': ')[0]}...'"
-        )
+        if len(error_count) == 0:
+            print(f"No errors during processing.")
+        else:
+            print(
+                f"{len(error_count)} files not processed due to '{str(error_count[0]).split(': ')[0]}...'"
+            )
     else:
         print(f"{len(error_count)} files not processed due to error")
 
