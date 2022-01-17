@@ -1,12 +1,10 @@
-from preprocess import _for_all_files
-from os import rename, path
-
-BASE_DIR = "data/3s5s"
+from preprocess import BASE_DIR_RENAMED, _for_all_files, BASE_DIR_RAW
+from os import rename, path, makedirs
 
 renameTable = [
     ("aim_chat_", "chat_aim_chat_"),
     ("aim_chat", "chat_aim_chat_"),
-    ("email", "email_email_"),
+    ("email", "email_mail_"),
     ("facebook_audio", "voip_facebook_"),
     ("facebook_chat_", "chat_facebook_"),
     ("facebook_chat", "chat_facebook_"),
@@ -31,6 +29,7 @@ renameTable = [
     ("skype_chat", "chat_skype_"),
     ("skype_video", "video_skype_"),
     ("skype_files", "filetransfer_skype_"),
+    ("skype_file", "filetransfer_skype_"),
     ("spotify_", "streaming_spotify_"),
     ("spotify", "streaming_spotify_"),
     ("bittorrent", "p2p_bittorrent_"),
@@ -45,9 +44,12 @@ renameTable = [
     ("youtube", "streaming_youtube_"),
 ]
 
-if __name__ == "__main__":
 
-    def process(filename, name, root, **kwargs):
+def rename_all_in_folder():
+    """Renames all csv files in the folder preprocess.BASE_DIR_RAW to the format used later by the tagging method."""
+
+    def process(root, filename, name, **kwargs):
+        originalName = name
         name = name.lower().replace("vpn_", "")
         for e in enumerate(renameTable):
             _, (pattern, replacement) = e
@@ -56,7 +58,20 @@ if __name__ == "__main__":
                 name = name.replace(pattern, replacement)
                 break
         name = name.replace("pcap_flow", "pcap_Flow")
-        rename(filename, path.join(root, name))
-        print(filename, " => ", path.join(root, name))
 
-    _for_all_files(process, BASE_DIR)
+        out_root = root.replace(BASE_DIR_RAW, BASE_DIR_RENAMED)
+        if not path.exists(out_root):
+            makedirs(out_root)
+        rename(
+            filename,
+            filename.replace(originalName, name).replace(
+                BASE_DIR_RAW, BASE_DIR_RENAMED
+            ),
+        )
+        print(f"{filename} => {filename.replace(originalName, name)}")
+
+    _for_all_files(process, BASE_DIR_RAW)
+
+
+if __name__ == "__main__":
+    rename_all_in_folder()
