@@ -115,13 +115,13 @@ def generate_flow_sequences():
 
     if all(error_count):
         if len(error_count) == 0:
-            print(f"No errors during processing.")
+            print(f"No errors during processing sequences.")
         else:
             print(
-                f"{len(error_count)} files not processed due to '{str(error_count[0]).split(': ')[0]}...'"
+                f"{len(error_count)} files not processed (for sequences) due to '{str(error_count[0]).split(': ')[0]}...'"
             )
     else:
-        print(f"{len(error_count)} files not processed due to error")
+        print(f"{len(error_count)} files not processed (for sequences) due to error")
 
     print(f"Percentage of usable mini-flows: {gTotal / files *100}")
     # print(gTotalList)
