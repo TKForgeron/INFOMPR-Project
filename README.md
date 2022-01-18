@@ -2,7 +2,7 @@
 
 **Training data (csv) is found in our shared Teams folder**
 
-## Om data te preprocessen moet je:
+### Om data te preprocessen moet je:
 1. Een map data aanmaken in de root folder (waar preprocess.py staat)
 2. Een map raw aanmaken in die nieuwe data map
 3. De twee mappen 120s5s en 3s5s downloaden van teams (of sharepoint) en in de raw map zetten
