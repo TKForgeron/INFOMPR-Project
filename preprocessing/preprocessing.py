@@ -8,7 +8,33 @@ BASE_DIR_RENAMED = "data/renamed/"
 BASE_DIR_SEQUENCES = "data/sequences/"
 BASE_DIR_TAGGED = "data/tagged/"
 BASE_DIR_PROCESSED = "data/processed/"
-CSV_FEATURES = ["Flow Duration", "Flow IAT Mean","Flow IAT Std","Flow IAT Max","Flow IAT Min","Fwd IAT Tot","Fwd IAT Mean","Fwd IAT Std","Fwd IAT Max","Fwd IAT Min","Bwd IAT Tot","Bwd IAT Mean","Bwd IAT Std","Bwd IAT Max","Bwd IAT Min","Active Std","Active Max","Active Min","Idle Mean","Idle Std","Idle Max","Idle Min","Flow Byts/s","Flow Pkts/s"]
+CSV_FEATURES = [
+    "Flow Duration",
+    "Flow IAT Mean",
+    "Flow IAT Std",
+    "Flow IAT Max",
+    "Flow IAT Min",
+    # "Fwd IAT Tot",
+    "Fwd IAT Mean",
+    "Fwd IAT Std",
+    "Fwd IAT Max",
+    "Fwd IAT Min",
+    # "Bwd IAT Tot",
+    "Bwd IAT Mean",
+    "Bwd IAT Std",
+    "Bwd IAT Max",
+    "Bwd IAT Min",
+    "Active Mean",
+    "Active Std",
+    "Active Max",
+    "Active Min",
+    "Idle Mean",
+    "Idle Std",
+    "Idle Max",
+    "Idle Min",
+    "Flow Byts/s",
+    "Flow Pkts/s",
+]
 SEQUENCE_LENGTH = 5
 RANDOM_STATE = 42
 
@@ -18,7 +44,7 @@ regex = re.compile("^([^_]*)_(.*)_\d*(.*)\.pcap_Flow.csv")
 # applicationType_applicationName_[index][a | b].pcap_Flow.csv
 
 
-def total_features():
+def total_features() -> int:
     """Returns the total number of features that will be in every csv file"""
     return (
         len(CSV_FEATURES)
@@ -259,6 +285,7 @@ def _sequences_to_rows():
                 fd.write(",".join(new_columns) + "\n")
 
     _for_all_files(process_file, BASE_DIR_TAGGED)
+
 
 SEQUENCE_LENGTH = 5
 RANDOM_STATE = 42
