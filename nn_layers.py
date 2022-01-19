@@ -52,14 +52,14 @@ def create_convolutional_layer(filters, kernel_size):
     return layers.Conv2D(
         filters,
         kernel_size,
-        strides=2,
-        padding="valid",
+        strides=1,
+        padding="same",
         data_format="channels_last",
         dilation_rate=1,
         groups=1,
-        activation="relu",
+        activation="softmax",
         use_bias=True,
-        kernel_initializer="glorot_normal",
+        kernel_initializer="glorot_uniform",
         bias_initializer="zeros",
         kernel_regularizer=None,
         bias_regularizer=None,
@@ -88,14 +88,17 @@ def create_batch_normalisation_layer():
     )
 
 
-def create_max_pool_layer(pool_size=2):
+def create_max_pool_layer(pool_size):
     """Create a new max pooling  (i.e. value of pooled cell will be the maximum of all cells in the window)
 
     Keyword arguments:
     [pool_size] -- integer or tuple of 2 integers, window size over which to take the maximum. (2, 2) will take the max value over a 2x2 pooling window. If only one integer is specified, the same window length will be used for both dimensions. Default is (2,2).
     """
     return layers.MaxPooling2D(
-        pool_size=pool_size, strides=None, padding="valid", data_format="channels_last"
+        pool_size=pool_size, 
+        strides=None, 
+        padding="same", 
+        data_format="channels_last"
     )
 
 
