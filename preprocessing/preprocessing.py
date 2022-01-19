@@ -37,8 +37,8 @@ CSV_FEATURES = [
 ]
 SEQUENCE_LENGTH = 5
 RANDOM_STATE = 42
-TEST_SET_SIZE = 0.10
-VAL_SET_SIZE = 0.10
+TEST_SET_SIZE = 0.15
+VAL_SET_SIZE = 0.15
 
 regex = re.compile("^([^_]*)_(.*)_\d*(.*)\.pcap_Flow.csv")
 
@@ -57,7 +57,6 @@ def total_features() -> int:
 
 def labels():
     """Returns the names and total number of labels that will be in every csv file
-
     Returns: [(name, length)]
     """
     return [
@@ -68,7 +67,6 @@ def labels():
 
 def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
     """Processes the data and splits it into a scaled train, validation and test set. The seed used for the split is not random, so this gives sets that can be used for reproducable results.
-
     Returns: (x_train, x_val, x_test, t_train, t_val, t_test), a tuple of scaled train and test data
     DO NOT MODIFY THIS CODE WITHOUT NOTIFYING THE REST OF THE GROUP
     """
@@ -96,7 +94,8 @@ def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
     # Remove all infinities
     data.to_csv("full.csv")
     for i in range(0, len(data.columns)):
-        data.iloc[:, i].replace(np.inf, np.finfo(np.float64).max, inplace=True)
+        max = data.loc[data.iloc[:, i] != np.inf, data.columns[i]].max()
+        data.iloc[:, i].replace(np.inf, max, inplace=True)
 
     # Transform data to numpy
     X = data.to_numpy()
@@ -115,6 +114,7 @@ def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
     # Split training and validation set, note test_size will be the (proportional) size of the validation set
     X = x_train
     t = tName_train
+    print( str(VAL_SET_SIZE / (1 - TEST_SET_SIZE)))
     net_validation_size = VAL_SET_SIZE / (1 - TEST_SET_SIZE)
     x_train, x_val, tName_train, tName_val = train_test_split(
         X, t, test_size=net_validation_size, random_state=RANDOM_STATE
@@ -154,9 +154,7 @@ def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
 def _for_all_files(function, base_dir, kwargs={}, **passedkwargs):
     """
     !!! given '**passedkwargs' will be passed to given 'function'
-
     Goes through all files and folders in 'base_dir' and and calls the given function on those files
-
     Keyword arguments:
     function -- the function to run over all files
     base_dir -- directory in which to walk over files
@@ -182,9 +180,7 @@ def _for_all_files(function, base_dir, kwargs={}, **passedkwargs):
 
 def _get_distinct_types(base_dir=BASE_DIR_PROCESSED):
     """Goes through all files and folders in 'base_dir' and returns a list of all distinct application types.
-
     Make sure that all files conform to the format "applicationType_applicationName_[index][a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
-
     Returns: List of distinct types
     """
 
@@ -201,9 +197,7 @@ def _get_distinct_types(base_dir=BASE_DIR_PROCESSED):
 
 def _get_distinct_applications(base_dir=BASE_DIR_PROCESSED):
     """Goes through all files and folders in 'base_dir' and returns a list of all distinct application names.
-
     Make sure that all files conform to the format "applicationType_applicationName_[index][a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
-
     Returns: List of distinct names
     """
     names = set()
@@ -219,7 +213,6 @@ def _get_distinct_applications(base_dir=BASE_DIR_PROCESSED):
 
 def _create_one_hot_encoders(distinct_types, distinct_names):
     """Given a list of types and a list of names, returns a tuple of functions that can be used to one-hot encode the application types and names.
-
     Returns: (Function, Function), where both functions take two arguments argument: the type/name of the file and the dataframe
     """
 
@@ -237,7 +230,6 @@ def _create_one_hot_encoders(distinct_types, distinct_names):
 def _process_files():
     """Goes through all files and folders in 'BASE_DIR_SEQUENCES' and adds labels for the application type and application name to them.
     Will also remove the features that are not required by the model.
-
     Make sure that all files conform to the format "applicationType_applicationName_[index][a | b].pcap_Flow.csv", where [a | b] means an optional character that is 'a' or 'b'.
     """
 

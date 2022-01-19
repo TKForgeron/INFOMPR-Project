@@ -66,7 +66,7 @@ for i in np.arange(0.0011, 0.001105, 0.00001):
 
 
     model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.0011),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                     loss=tf.keras.losses.CategoricalCrossentropy(),
                     metrics=[tf.keras.metrics.CategoricalAccuracy()]
     )
@@ -78,7 +78,7 @@ for i in np.arange(0.0011, 0.001105, 0.00001):
             batch_size=128,
             epochs=20,
             validation_data=(x_val, t_val),
-            verbose=0,
+            verbose=2,
     )
 
         # MODEL TESTING
