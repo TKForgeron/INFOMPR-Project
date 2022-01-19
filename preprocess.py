@@ -11,19 +11,19 @@ from preprocessing.preprocessing import (
     _process_files,
     _sequences_to_rows,
 )
-import preprocessing.preprocessing as pp
+import preprocessing.preprocessing as pping
 
 
 def total_features():
-    return pp.total_features()
+    return pping.total_features()
 
 
 def labels():
-    return pp.labels()
+    return pping.labels()
 
 
-def get_train_validation_test_set():
-    return pp.get_train_validation_test_set()
+def get_train_validation_test_set(RANDOM_STATE):
+    return pping.get_train_validation_test_set(RANDOM_STATE)
 
 
 def do_all_preprocessing():

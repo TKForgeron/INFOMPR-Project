@@ -10,6 +10,7 @@ BASE_DIR_TAGGED = "data/tagged/"
 BASE_DIR_PROCESSED = "data/processed/"
 CSV_FEATURES = ["Src Port", "Dst Port", "Protocol"]
 SEQUENCE_LENGTH = 5
+RANDOM_STATE = 42
 
 regex = re.compile("^([^_]*)_(.*)_\d*(.*)\.pcap_Flow.csv")
 
@@ -37,7 +38,7 @@ def labels():
     ]
 
 
-def get_train_validation_test_set():
+def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
     """Processes the data and splits it into a scaled train, validation and test set. The seed used for the split is not random, so this gives sets that can be used for reproducable results.
 
     Returns: (x_train, x_val, x_test, t_train, t_val, t_test), a tuple of scaled train and test data
@@ -77,21 +78,21 @@ def get_train_validation_test_set():
     # Split test/validation and training set
     # X = X.reshape((-1, total_features()))
     x_train, x_test, tName_train, tName_test = train_test_split(
-        X, tName, test_size=0.33, random_state=42
+        X, tName, test_size=0.33, random_state=RANDOM_STATE
     )
     x_train, x_test, tType_train, tType_test = train_test_split(
-        X, tType, test_size=0.33, random_state=42
+        X, tType, test_size=0.33, random_state=RANDOM_STATE
     )
 
     # Split training and validation set, note test_size will be the (proportional) size of the validation set
     X = x_train
     t = tName_train
     x_train, x_val, tName_train, tName_val = train_test_split(
-        X, t, test_size=0.25, random_state=42
+        X, t, test_size=0.25, random_state=RANDOM_STATE
     )
     t = tType_train
     x_train, x_val, tType_train, tType_val = train_test_split(
-        X, t, test_size=0.25, random_state=42
+        X, t, test_size=0.25, random_state=RANDOM_STATE
     )
 
     return (
