@@ -4,7 +4,6 @@ from distutils.command.build import build
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-import keras_tuner as kt
 from nn_layers import *
 import preprocess as pp
 import random as python_random
@@ -24,7 +23,7 @@ os.environ["PYTHONHASHSEED"] = "0"
 # MODEL SETUP
 
 
-def build_model(hyperparams=None, plot_model=False):
+def build_model(hyperparams=None, plot_model_arch=False):
     input_layer = keras.Input(shape=(NUM_FEATURES * pp.SEQUENCE_LENGTH))
     reshape = create_reshape_layer(
         (NUM_FEATURES * pp.SEQUENCE_LENGTH,), (NUM_FEATURES, pp.SEQUENCE_LENGTH)
@@ -42,14 +41,14 @@ def build_model(hyperparams=None, plot_model=False):
     model = keras.Model(inputs=input_layer, outputs=outputs)
     model.summary()
 
-    if plot_model:
-        keras.utils.plot_model(model, "GRU_model.png", show_shapes=True)
+    if plot_model_arch:
+        keras.utils.plot_model(model, "results/GRU_model.png", show_shapes=True)
 
     # TODO: set compiler variables
     model.compile(
         loss=keras.losses.CategoricalCrossentropy(from_logits=True),
         optimizer=keras.optimizers.RMSprop(),
-        metrics=["accuracy"],
+        metrics=[tf.keras.metrics.CategoricalAccuracy()],
     )
     return model
 
@@ -57,17 +56,18 @@ def build_model(hyperparams=None, plot_model=False):
 # CREATE TRAIN TEST VAL SPLIT
 x_train, x_val, x_test, t_train, t_val, t_test = pp.get_train_validation_test_set()
 
-model = build_model(plot_model=True)
+model = build_model(plot_model_arch=True)
 
 # MODEL TRAINING
-# model.fit(x_train, t_train, batch_size=64, epochs=20, validation_data=(x_val, t_val))
+model.fit(x_train, t_train, batch_size=64, epochs=20, validation_data=(x_val, t_val))
 # MODEL TUNING
-tuner = kt.RandomSearch(build_model, objective="val_loss", max_trials=5)
-tuner.search(x_train, t_train, epochs=5, validation_data=(x_val, t_val))
-best_model = tuner.get_best_models()[0]
+# import keras_tuner as kt
+# tuner = kt.RandomSearch(build_model, objective="val_loss", max_trials=5)
+# tuner.search(x_train, t_train, epochs=5, validation_data=(x_val, t_val))
+# best_model = tuner.get_best_models()[0]
 
-# # MODEL TESTING
-# test_metric_names = model.metrics_names
-# test_scores = model.evaluate(x_test, t_test, verbose=2)
-# for idx, score in enumerate(test_scores):
-#     print(test_metric_names[idx], ": ", score)
+# MODEL TESTING
+test_metric_names = model.metrics_names
+test_scores = model.evaluate(x_test, t_test, verbose=2)
+for idx, score in enumerate(test_scores):
+    print(test_metric_names[idx], ": ", score)

@@ -7,6 +7,7 @@ from preprocessing.preprocessing import (
     BASE_DIR_RENAMED,
     BASE_DIR_SEQUENCES,
     BASE_DIR_TAGGED,
+    RANDOM_STATE,
     SEQUENCE_LENGTH,
     _process_files,
     _sequences_to_rows,
