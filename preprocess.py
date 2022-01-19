@@ -22,8 +22,8 @@ def labels():
     return pping.labels()
 
 
-def get_train_validation_test_set(RANDOM_STATE):
-    return pping.get_train_validation_test_set(RANDOM_STATE)
+def get_train_validation_test_set():
+    return pping.get_train_validation_test_set()
 
 
 def do_all_preprocessing():
