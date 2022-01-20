@@ -47,7 +47,7 @@ def build_model(hyperparams=None, plot_model_arch=False):
     # TODO: set compiler variables
     model.compile(
         loss=keras.losses.CategoricalCrossentropy(from_logits=True),
-        optimizer=keras.optimizers.RMSprop(),
+        optimizer=keras.optimizers.Nadam(),
         metrics=[tf.keras.metrics.CategoricalAccuracy()],
     )
     return model
@@ -59,7 +59,7 @@ x_train, x_val, x_test, t_train, t_val, t_test = pp.get_train_validation_test_se
 model = build_model(plot_model_arch=True)
 
 # MODEL TRAINING
-model.fit(x_train, t_train, batch_size=64, epochs=20, validation_data=(x_val, t_val))
+model.fit(x_train, t_train, batch_size=128, epochs=64, validation_data=(x_val, t_val))
 # MODEL TUNING
 # import keras_tuner as kt
 # tuner = kt.RandomSearch(build_model, objective="val_loss", max_trials=5)
