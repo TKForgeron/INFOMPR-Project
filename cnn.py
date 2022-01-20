@@ -84,7 +84,7 @@ for i in np.arange (0.001, 0.002, 0.001):
 
     # MODEL TRAINING
 
-    #x_train, x_val, x_test, t_train, t_val, t_test = pp.get_train_validation_test_set()
+    x_train, x_val, x_test, t_train, t_val, t_test = pp.get_train_validation_test_set()
 
 
     model.compile(
@@ -113,10 +113,6 @@ for i in np.arange (0.001, 0.002, 0.001):
 
     plt.plot(testing.history['loss'])
     plt.plot(testing.history['val_loss'])
-
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
     plt.show()
     
     for idx, score in enumerate(test_scores):
