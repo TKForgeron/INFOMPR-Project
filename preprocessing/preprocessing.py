@@ -65,7 +65,7 @@ def labels():
     ]
 
 
-def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
+def get_train_validation_test_set():
     """Processes the data and splits it into a scaled train, validation and test set. The seed used for the split is not random, so this gives sets that can be used for reproducable results.
     Returns: (x_train, x_val, x_test, t_train, t_val, t_test), a tuple of scaled train and test data
     DO NOT MODIFY THIS CODE WITHOUT NOTIFYING THE REST OF THE GROUP
@@ -92,7 +92,7 @@ def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
     data = complete.drop(app_names, axis=1).drop(app_types, axis=1)
 
     # Remove all infinities
-    data.to_csv("full.csv")
+    data.to_csv("data/X.csv", sep=";")
     for i in range(0, len(data.columns)):
         max = data.loc[data.iloc[:, i] != np.inf, data.columns[i]].max()
         data.iloc[:, i].replace(np.inf, max, inplace=True)
@@ -114,7 +114,10 @@ def get_train_validation_test_set(RANDOM_STATE=RANDOM_STATE):
     # Split training and validation set, note test_size will be the (proportional) size of the validation set
     X = x_train
     t = tName_train
-    print( str(VAL_SET_SIZE / (1 - TEST_SET_SIZE)))
+    np.savetxt("data/t.csv", t, delimiter=";")
+    print(
+        f"preprocessing.get_train_validation_test_set(): \nVAL_SET_SIZE / (1 - TEST_SET_SIZE): {str(VAL_SET_SIZE / (1 - TEST_SET_SIZE))}"
+    )
     net_validation_size = VAL_SET_SIZE / (1 - TEST_SET_SIZE)
     x_train, x_val, tName_train, tName_val = train_test_split(
         X, t, test_size=net_validation_size, random_state=RANDOM_STATE

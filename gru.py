@@ -47,7 +47,7 @@ def build_model(hyperparams=None, plot_model_arch=False):
     # TODO: set compiler variables
     model.compile(
         loss=keras.losses.CategoricalCrossentropy(from_logits=True),
-        optimizer=keras.optimizers.Nadam(),
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
         metrics=[tf.keras.metrics.CategoricalAccuracy()],
     )
     return model
