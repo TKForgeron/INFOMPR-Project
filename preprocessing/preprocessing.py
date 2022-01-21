@@ -37,8 +37,8 @@ CSV_FEATURES = [
 ]
 SEQUENCE_LENGTH = 10
 RANDOM_STATE = 42
-TEST_SET_SIZE = 0.15
-VAL_SET_SIZE = 0.15
+TEST_SET_SIZE = 0.125
+VAL_SET_SIZE = 0.125
 
 regex = re.compile("^([^_]*)_(.*)_\d*(.*)\.pcap_Flow.csv")
 
