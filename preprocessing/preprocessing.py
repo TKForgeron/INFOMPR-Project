@@ -154,9 +154,9 @@ def get_train_validation_test_set():
 
     # Reshape data so it can be scaled
     shape_train, shape_val, shape_test = x_train.shape, x_val.shape, x_test.shape
-    x_train = x_train.reshape((shape_train[0] * 5, total_features()))
-    x_val = x_val.reshape((shape_val[0] * 5, total_features()))
-    x_test = x_test.reshape((shape_test[0] * 5, total_features()))
+    x_train = x_train.reshape((shape_train[0] * SEQUENCE_LENGTH, total_features()))
+    x_val = x_val.reshape((shape_val[0] * SEQUENCE_LENGTH, total_features()))
+    x_test = x_test.reshape((shape_test[0] * SEQUENCE_LENGTH, total_features()))
 
     # Scale data
     scaler = StandardScaler()
