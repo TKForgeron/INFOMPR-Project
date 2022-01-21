@@ -72,7 +72,7 @@ def get_train_validation_test_set():
     """
 
     from sklearn.preprocessing import StandardScaler
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 
     # Read in all files
     frames = []
