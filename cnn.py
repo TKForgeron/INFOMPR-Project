@@ -59,14 +59,21 @@ for i in np.arange (0.001, 0.002, 0.001):
     reshape = create_reshape_layer((NUM_FEATURES * pp.SEQUENCE_LENGTH,), (NUM_FEATURES, pp.SEQUENCE_LENGTH, 1))(input_layer)
 
     # TODO: tune the parameters of all layers below, note: include parameters from "Network Traffic Classifier With Convolutional and Recurrent Neural Networks for Internet of Things"
-    conv = create_convolutional_layer(32, kernel_size=(2,2))(reshape)  
     # data_format = channels_last corresponds to inputs with shape (batch_size, height, width, channels) while channels_first corresponds to inputs with shape (batch_size, channels, height, width)
-    pool = create_max_pool_layer(pool_size=(1, 1))(conv)
+   
+    conv = create_convolutional_layer(32, kernel_size=(3,3))(reshape)  
+    pool = create_max_pool_layer(pool_size=(2, 2))(conv)
     bn = create_batch_normalisation_layer()(pool)
-    conv = create_convolutional_layer(64, kernel_size=(2, 2))(bn)
-    pool = create_max_pool_layer(pool_size=(1, 1))(conv)
 
+    conv = create_convolutional_layer(64, kernel_size=(3,3))(bn)
+    pool = create_max_pool_layer(pool_size=(2, 2))(conv)
     bn = create_batch_normalisation_layer()(pool)
+
+    conv = create_convolutional_layer(128, kernel_size=(3,3))(bn)
+    pool = create_max_pool_layer(pool_size=(2, 2))(conv)
+    bn = create_batch_normalisation_layer()(pool)
+
+    
     reshape = create_reshape_layer(pool.shape, (prod(pool.shape),))(bn)
     dense = create_dense_layer(200)(reshape)
 
@@ -97,7 +104,7 @@ for i in np.arange (0.001, 0.002, 0.001):
     testing = model.fit(
             x_train,
             t_train,
-            batch_size=64,
+            batch_size=128,
             epochs=20,
             validation_data=(x_val, t_val),
             verbose=2,

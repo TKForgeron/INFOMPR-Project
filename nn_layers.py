@@ -52,7 +52,7 @@ def create_convolutional_layer(filters, kernel_size):
     return layers.Conv2D(
         filters,
         kernel_size,
-        strides=1,
+        strides=2,
         padding="same",
         data_format="channels_last",
         dilation_rate=1,
