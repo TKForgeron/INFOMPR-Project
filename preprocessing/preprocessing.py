@@ -89,6 +89,7 @@ def get_train_validation_test_set():
     complete = pd.concat(frames)
     labelsName = complete[app_names]
     labelsType = complete[app_types]
+    labels = complete[[*app_types, *app_names]]
     data = complete.drop(app_names, axis=1).drop(app_types, axis=1)
 
     # Remove all infinities
@@ -101,30 +102,54 @@ def get_train_validation_test_set():
     X = data.to_numpy()
     tName = labelsName.to_numpy()
     tType = labelsType.to_numpy()
+    labels = labels.to_numpy()
 
     # Split test/validation and training set
-    # X = X.reshape((-1, total_features()))
+    count = {}
+    rows_to_remove = set()
+    # Count occurences of labels
+    for row in range(0, labels.shape[0]):
+        i = "".join(map(lambda a: str(int(a)), list(labels[row])))
+        if i not in count.keys():
+            count[i] = 0
+        count[i] += 1
+
+    # Flag all rows that represent a label occuring less than 3 times
+    for row in range(0, labels.shape[0]):
+        i = "".join(map(lambda a: str(int(a)), list(labels[row])))
+        if count[i] < 3:
+            rows_to_remove.add(row)
+    # Remove rows occuring less than 3 times
+    rows_to_remove = list(rows_to_remove)
+    rows_to_remove.reverse()
+    for row in rows_to_remove:
+        X = np.delete(X, row, axis=0)
+        tName = np.delete(tName, row, axis=0)
+        tType = np.delete(tType, row, axis=0)
+        labels = np.delete(labels, row, axis=0)
+
     x_train, x_test, tName_train, tName_test = train_test_split(
-        X, tName, test_size=TEST_SET_SIZE, random_state=RANDOM_STATE
+        X, tName, test_size=TEST_SET_SIZE, random_state=RANDOM_STATE, stratify=labels
     )
     x_train, x_test, tType_train, tType_test = train_test_split(
-        X, tType, test_size=TEST_SET_SIZE, random_state=RANDOM_STATE
+        X, tType, test_size=TEST_SET_SIZE, random_state=RANDOM_STATE, stratify=labels
     )
 
     # Split training and validation set, note test_size will be the (proportional) size of the validation set
     X = x_train
     t = tName_train
+    labels = np.concatenate((tType_train, tName_train), axis=1)
     np.savetxt("data/t.csv", t, delimiter=";")
     print(
         f"preprocessing.get_train_validation_test_set(): \nVAL_SET_SIZE / (1 - TEST_SET_SIZE): {str(VAL_SET_SIZE / (1 - TEST_SET_SIZE))}"
     )
     net_validation_size = VAL_SET_SIZE / (1 - TEST_SET_SIZE)
     x_train, x_val, tName_train, tName_val = train_test_split(
-        X, t, test_size=net_validation_size, random_state=RANDOM_STATE
+        X, t, test_size=net_validation_size, random_state=RANDOM_STATE, stratify=labels
     )
     t = tType_train
     x_train, x_val, tType_train, tType_val = train_test_split(
-        X, t, test_size=net_validation_size, random_state=RANDOM_STATE
+        X, t, test_size=net_validation_size, random_state=RANDOM_STATE, stratify=labels
     )
 
     # Reshape data so it can be scaled
