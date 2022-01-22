@@ -117,34 +117,9 @@ for i in np.arange (0.008, 0.009, 0.001):
     cnn_results = model.predict(x_test, verbose=0)
     print("Learning rate " + str(i))
 
-    print(testing)
-
     plt.plot(testing.history['loss'])
     plt.plot(testing.history['val_loss'])
     plt.show()
-
-    # Example of calculating the mcnemar test
-    from statsmodels.stats.contingency_tables import mcnemar
-    matrix = np.zeros((2,2)) 
-
-
-    for i in range(0, len(t_test[0])):
-        a = np.where(t_test[0][i] == max(t_test[0][i]))[0][0] ==  np.where(cnn_results[0][i] == max(cnn_results[0][i]))[0][0]
-        b = np.where(t_test[0][i] == max(t_test[0][i]))[0][0] ==  np.where(rnn_results[0][i] == max(rnn_results[0][i]))[0][0]
-        matrix[int(not a)][int(not b)] += 1
-
-    test = mcnemar(matrix, exact=True)
-
-    print(test.pvalue)
-
-    # count = 0
-    # for i in range(0, len(t_test[0])):
-    #     if np.where(t_test[0][i] == max(t_test[0][i]))[0][0] ==  np.where(results[0][i] == max(results[0][i]))[0][0]:
-    #         count+= 1
-    # print(count / len(t_test[0]))
-
-    # def calcAccuracy(pred, labels):
-
-    
+  
     for idx, score in enumerate(test_scores):
         print(test_metric_names[idx], ": ", score)
