@@ -59,7 +59,7 @@ def generate_flow_sequences():
                 df3["Start Time"][j] = starttime1
                 df3["End Time"][j] = endtime1
 
-            nf3 = df3.to_numpy()
+            np_df3 = df3.to_numpy()
             startIndex = df3.columns.get_loc("Start Time")
             endIndex = df3.columns.get_loc("End Time")
             flowIndex = df3.columns.get_loc("Flow ID")
@@ -73,21 +73,41 @@ def generate_flow_sequences():
                 miniflow_row_ids = []
 
                 for j in range(0, len(df3)):
-                    starttime1, endtime1 = nf3[j, startIndex], nf3[j, endIndex]
+                    starttime1, endtime1 = np_df3[j, startIndex], np_df3[j, endIndex]
                     if (
                         starttime1 >= starttime120
                         and endtime1 <= endtime120
-                        and flow120 == nf3[j, flowIndex]
+                        and flow120 == np_df3[j, flowIndex]
                         and not j in matched_js
                     ):
                         matched_js.add(j)
                         rowTotal += 1
                         miniflow_row_ids.append(j)
                 if rowTotal >= SEQUENCE_LENGTH:
-                    total += (
-                        rowTotal - SEQUENCE_LENGTH + 1
-                    )  # HET IS DUS WEL DIT, MAAR DAN HOEF JE JE EINDPERCENTAGE NIET MEER DOOR 5 TE DELEN
-                    rows_subset = [nf3[row, :] for row in miniflow_row_ids]
+                    total += rowTotal - SEQUENCE_LENGTH + 1
+                    rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
+                    for row in sequenceToRows(rows_subset):
+                        out_rows.append(row)
+                elif (
+                    rowTotal != 0
+                ):  # zero-padding sequences to match the required/configured SEQUENCE_LENGTH
+                    total += rowTotal
+                    rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
+                    null_list = [0] * len(rows_subset[0])
+                    no_miniflows_to_pad = SEQUENCE_LENGTH - len(rows_subset)
+
+                    while no_miniflows_to_pad != 0:
+                        rows_subset.append(np.array(null_list))
+                        no_miniflows_to_pad -= 1
+
+                    # print("miniflows:", len(rows_subset))
+                    # print("no_miniflows_to_pad:", no_miniflows_to_pad)
+                    # print(rows_subset)
+                    # for i in range(0, len(rows_subset)):
+                    #     print(len(rows_subset[i]))
+                    # print("null_list:", null_list)
+                    # exit(0)
+
                     for row in sequenceToRows(rows_subset):
                         out_rows.append(row)
             gTotal += total
@@ -107,9 +127,8 @@ def generate_flow_sequences():
                 delimiter=",",
             )
         except Exception as e:
-            # print("Error on file: ", filename)
-            error_count.append(e)
             print(e)
+            error_count.append(e)
 
     _for_all_files(process_file, path.join(BASE_DIR_RENAMED, DIR_120s))
 
@@ -123,8 +142,8 @@ def generate_flow_sequences():
     else:
         print(f"{len(error_count)} files not processed (for sequences) due to error")
 
-    print(f"Percentage of usable mini-flows: {gTotal / files *100}")
-    # print(gTotalList)
+    print(f"Percentage of usable mini-flows: {round(gTotal / files *100,2)}")
+    print(f"Total usable mini-flows: {gTotal}")
 
 
 if __name__ == "__main__":
