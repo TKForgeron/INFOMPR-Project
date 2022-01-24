@@ -49,7 +49,7 @@ def build_model(hyperparams=None, plot_model_arch=False):
 
     # TODO: set compiler variables
     model.compile(
-        loss=CategoricalCrossentropy(from_logits=True),
+        loss=CategoricalCrossentropy(from_logits=False),
         optimizer=keras.optimizers.Adam(learning_rate=0.001),  # tunable
         metrics=[CategoricalAccuracy()],
     )

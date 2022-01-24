@@ -64,11 +64,24 @@ def add_padding(rows_subset, how="repeat"):
             zeropadding_data = [x * 0 + 0.01 for x in rows_subset_features]
         elif how == "one":
             zeropadding_data = [x * 0 + 1 for x in rows_subset_features]
-        elif how == "avg":
+        elif how == "avg_within":
             from statistics import mean
 
             avg = mean(rows_subset_features)
             zeropadding_data = [avg] * len(rows_subset_features)
+        elif how == "avg_between":
+            miniflows_data = rows_subset[:][7:-3]
+            miniflows = np.array(miniflows_data).reshape(
+                (len(miniflows_data), len(miniflows_data[0]))
+            )
+            avg_between_miniflows = np.average(miniflows, axis=0)
+
+            if len(avg_between_miniflows) == len(rows_subset_features[0]):
+                zeropadding_data = list(avg_between_miniflows) * len(
+                    rows_subset_features
+                )
+            else:
+                print("HOOOOOOORSE")
 
         zeropadding_last_3_cols = rows_subset[0][-3:]
         for i in range(0, no_miniflows_to_pad):
@@ -161,7 +174,7 @@ def generate_flow_sequences():
                     total += rowTotal
                     rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
 
-                    add_padding(rows_subset, how="repeat")
+                    add_padding(rows_subset, how="avg_within")
 
                     for row in sequenceToRows(rows_subset):
                         out_rows.append(row)
