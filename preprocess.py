@@ -42,3 +42,4 @@ def do_all_preprocessing():
 
 if __name__ == "__main__":
     do_all_preprocessing()
+    # generate_flow_sequences()

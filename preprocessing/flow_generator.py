@@ -1,5 +1,6 @@
 # The mini-flow generator
 
+from this import d
 import pandas as pd
 import numpy as np
 import datetime
@@ -30,12 +31,79 @@ def d2T(timestamp, duration):
 
 
 def sequenceToRows(sequence):
-    """Given an array of miniflows, outputs an array of sequenced miniflows, with stride=1."""
+    """
+
+    Given an array of miniflows, outputs an array of sequenced miniflows, with stride=1.
+
+
+    """
     output = []
     for i in range(0, len(sequence) - SEQUENCE_LENGTH + 1):
         for j in range(i, i + SEQUENCE_LENGTH):
             output.append(sequence[j])
     return output
+
+
+def add_padding(rows_subset, how="repeat"):
+    """
+
+    Given an array of miniflows, outputs an array of miniflows filling the length up to SEQUENCE_LENGTH.
+    The (p)added miniflows can be zero-filled, one-filled,
+    filled by repeating the given array,
+    or filled with the average values of the miniflows passed.
+
+
+    """
+
+    no_miniflows_to_pad = SEQUENCE_LENGTH - len(rows_subset)
+    rows_subset_features = rows_subset[0][7:-3]
+    zeropadding_list = []
+
+    if not how == "repeat":
+        if how == "zero":
+            zeropadding_data = [x * 0 + 0.01 for x in rows_subset_features]
+        elif how == "one":
+            zeropadding_data = [x * 0 + 1 for x in rows_subset_features]
+        elif how == "avg":
+            from statistics import mean
+
+            avg = mean(rows_subset_features)
+            zeropadding_data = [avg] * len(rows_subset_features)
+
+        zeropadding_last_3_cols = rows_subset[0][-3:]
+        for i in range(0, no_miniflows_to_pad):
+            zeropadding_src_ip = [rows_subset[0][1] + str(i)]
+            zeropadding_dst_ip = [rows_subset[0][3] + str(i)]
+            zeropadding_flow_id = "-".join(
+                [
+                    *zeropadding_src_ip,
+                    *zeropadding_dst_ip,
+                    rows_subset[0][0].split("-", 2)[2],
+                ]
+            )
+            zeropadding_list.append(
+                [zeropadding_flow_id]
+                + zeropadding_src_ip
+                + [rows_subset[0][2]]
+                + zeropadding_dst_ip
+                + list(rows_subset[0][4:7])
+                + zeropadding_data
+                + list(zeropadding_last_3_cols)
+            )
+
+        zeropadding_list.reverse()
+        while no_miniflows_to_pad != 0:
+            rows_subset.append(np.array(zeropadding_list[no_miniflows_to_pad - 1]))
+            no_miniflows_to_pad -= 1
+    elif how == "repeat":
+        rows_subset = rows_subset * SEQUENCE_LENGTH
+        rows_subset = rows_subset[:SEQUENCE_LENGTH]
+    else:
+        raise Exception(
+            "'how' not specified correctly in function: add_padding(). Use one of the following: ['zero','one','avg','repeat']"
+        )
+
+    return rows_subset
 
 
 def generate_flow_sequences():
@@ -88,25 +156,12 @@ def generate_flow_sequences():
                     rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
                     for row in sequenceToRows(rows_subset):
                         out_rows.append(row)
-                elif (
-                    rowTotal != 0
-                ):  # zero-padding sequences to match the required/configured SEQUENCE_LENGTH
+                elif rowTotal != 0:
+                    # zero-padding sequences to match the required/configured SEQUENCE_LENGTH
                     total += rowTotal
                     rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
-                    null_list = [0] * len(rows_subset[0])
-                    no_miniflows_to_pad = SEQUENCE_LENGTH - len(rows_subset)
 
-                    while no_miniflows_to_pad != 0:
-                        rows_subset.append(np.array(null_list))
-                        no_miniflows_to_pad -= 1
-
-                    # print("miniflows:", len(rows_subset))
-                    # print("no_miniflows_to_pad:", no_miniflows_to_pad)
-                    # print(rows_subset)
-                    # for i in range(0, len(rows_subset)):
-                    #     print(len(rows_subset[i]))
-                    # print("null_list:", null_list)
-                    # exit(0)
+                    add_padding(rows_subset, how="repeat")
 
                     for row in sequenceToRows(rows_subset):
                         out_rows.append(row)

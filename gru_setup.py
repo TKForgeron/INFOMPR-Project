@@ -58,13 +58,13 @@ def build_model(hyperparams=None, plot_model_arch=False):
 
 # UNCOMMENT ONDERSTAAND ALS JE NIET MET KERAS-TUNER WIL WERKEN
 
-# # MODEL TRAINING
-# model = build_model(plot_model_arch=True)
-# model.fit(x_train, t_train, batch_size=128, epochs=40, validation_data=(x_val, t_val))
+# MODEL TRAINING
+model = build_model(plot_model_arch=True)
+model.fit(x_train, t_train, batch_size=128, epochs=40, validation_data=(x_val, t_val))
 
 # MODEL TESTING
-# test_metric_names = model.metrics_names
-# test_scores = model.evaluate(x_test, t_test, verbose=0)
-# rnn_results = model.predict(x_test, verbose=0)
-# for idx, score in enumerate(test_scores):
-#     print(test_metric_names[idx], ": ", score)
+test_metric_names = model.metrics_names
+test_scores = model.evaluate(x_test, t_test, verbose=0)
+rnn_results = model.predict(x_test, verbose=0)
+for idx, score in enumerate(test_scores):
+    print(test_metric_names[idx], ": ", score)
