@@ -1,4 +1,5 @@
 from tensorflow.keras import layers
+from tensorflow.keras import regularizers
 
 ## COMMON LAYERS
 

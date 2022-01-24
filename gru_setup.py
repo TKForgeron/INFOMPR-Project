@@ -9,6 +9,7 @@ import os
 from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 from nn_layers import *
+from matplotlib import pyplot as plt
 
 # BASIC SETUP
 tf.random.set_seed(pp.RANDOM_STATE)
@@ -49,9 +50,9 @@ def build_model(hyperparams=None, plot_model_arch=False):
 
     # TODO: set compiler variables
     model.compile(
-        loss=CategoricalCrossentropy(from_logits=False),
-        optimizer=keras.optimizers.Adam(learning_rate=0.001),  # tunable
-        metrics=[CategoricalAccuracy()],
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0008),
+        loss=keras.losses.CategoricalCrossentropy(from_logits=False),
+        metrics=[tf.keras.metrics.CategoricalAccuracy()]
     )
     return model
 
@@ -60,11 +61,16 @@ def build_model(hyperparams=None, plot_model_arch=False):
 
 # MODEL TRAINING
 model = build_model(plot_model_arch=True)
-model.fit(x_train, t_train, batch_size=128, epochs=40, validation_data=(x_val, t_val))
+testing = model.fit(x_train, t_train, batch_size=128, epochs=100, validation_data=(x_val, t_val), verbose=2)
 
 # MODEL TESTING
 test_metric_names = model.metrics_names
 test_scores = model.evaluate(x_test, t_test, verbose=0)
 rnn_results = model.predict(x_test, verbose=0)
+
+plt.plot(testing.history['loss'])
+plt.plot(testing.history['val_loss'])
+plt.show()
+
 for idx, score in enumerate(test_scores):
     print(test_metric_names[idx], ": ", score)
