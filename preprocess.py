@@ -32,7 +32,7 @@ def do_all_preprocessing():
         if os.path.exists(BASE_DIR_RAW):
             rename_all_in_folder()
         if os.path.exists(BASE_DIR_RENAMED):
-            generate_flow_sequences()
+            generate_flow_sequences(padding=False)
 
     if os.path.exists(BASE_DIR_SEQUENCES):
         _process_files()

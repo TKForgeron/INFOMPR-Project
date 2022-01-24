@@ -1,6 +1,5 @@
 # The mini-flow generator
 
-from this import d
 import pandas as pd
 import numpy as np
 import datetime
@@ -30,7 +29,7 @@ def d2T(timestamp, duration):
     return (timestamp120, endtime120)
 
 
-def sequenceToRows(sequence):
+def sequence_to_rows(sequence):
     """
 
     Given an array of miniflows, outputs an array of sequenced miniflows, with stride=1.
@@ -64,6 +63,8 @@ def add_padding(rows_subset, how="repeat"):
             zeropadding_data = [x * 0 + 0.01 for x in rows_subset_features]
         elif how == "one":
             zeropadding_data = [x * 0 + 1 for x in rows_subset_features]
+        elif how == "hundred":
+            zeropadding_data = [x * 0 + 100 for x in rows_subset_features]
         elif how == "avg_within":
             from statistics import mean
 
@@ -119,7 +120,7 @@ def add_padding(rows_subset, how="repeat"):
     return rows_subset
 
 
-def generate_flow_sequences():
+def generate_flow_sequences(padding=False):
     error_count = []
     gTotal = 0
     files = 0
@@ -166,17 +167,17 @@ def generate_flow_sequences():
                         miniflow_row_ids.append(j)
                 if rowTotal >= SEQUENCE_LENGTH:
                     total += rowTotal - SEQUENCE_LENGTH + 1
-                    rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
-                    for row in sequenceToRows(rows_subset):
+                    sequences = [np_df3[row, :] for row in miniflow_row_ids]
+                    for row in sequence_to_rows(sequences):
                         out_rows.append(row)
-                elif rowTotal != 0:
+                elif rowTotal != 0 and padding:
                     # zero-padding sequences to match the required/configured SEQUENCE_LENGTH
                     total += rowTotal
                     rows_subset = [np_df3[row, :] for row in miniflow_row_ids]
 
-                    add_padding(rows_subset, how="avg_within")
+                    padded_sequences = add_padding(rows_subset, how="repeat")
 
-                    for row in sequenceToRows(rows_subset):
+                    for row in sequence_to_rows(padded_sequences):
                         out_rows.append(row)
             gTotal += total
             print(filename, ": ", total / len(df3))
