@@ -9,8 +9,12 @@ from matplotlib import pyplot as plt
 from keras.models import Sequential
 import os
 
+import time
+starttime = time.process_time()
+
 NUM_FEATURES = pp.total_features()  # amount of fields in the input
 LABELS = pp.labels()  # amount of tags in the output
+
 
 
 def prod(tuple):
@@ -32,6 +36,12 @@ for i in np.arange (0.008, 0.009, 0.001):
     os.environ["PYTHONHASHSEED"] = "0"
 
     x_train, x_val, x_test, t_train, t_val, t_test = pp.get_train_validation_test_set()
+
+    index = 1
+    t_train = t_train[index]
+    t_test = t_test[index]
+    t_val = t_val[index]
+    LABELS = [LABELS[index]]
 
 
     # MODEL SETUP
@@ -93,7 +103,7 @@ for i in np.arange (0.008, 0.009, 0.001):
     
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.00006),
         loss=keras.losses.CategoricalCrossentropy(from_logits=False),
         metrics=[tf.keras.metrics.CategoricalAccuracy()],
     )
@@ -102,8 +112,8 @@ for i in np.arange (0.008, 0.009, 0.001):
     testing = model.fit(
         x_train,
         t_train,
-        batch_size=128,
-        epochs=40,
+        batch_size=64,
+        epochs=100,
         validation_data=(x_val, t_val),
         verbose=2,
         
@@ -113,14 +123,18 @@ for i in np.arange (0.008, 0.009, 0.001):
     test_metric_names = model.metrics_names
     #print(str(test_scores))
     #prediction = model.predict(x_test, verbose=0)
+
+
     test_scores = model.evaluate(x_test, t_test, verbose=0)
 
-    cnn_results = model.predict(x_test, verbose=0)
-    print("Learning rate " + str(i))
+    cnn_app_results = model.predict(x_test, verbose=0)
+    
 
     plt.plot(testing.history['loss'])
     plt.plot(testing.history['val_loss'])
     plt.show()
+    print("CNN type")
+    print(time.process_time() - starttime)
   
     for idx, score in enumerate(test_scores):
         print(test_metric_names[idx], ": ", score)

@@ -10,6 +10,8 @@ from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 from nn_layers import *
 from matplotlib import pyplot as plt
+import time
+starttime = time.process_time()
 
 # BASIC SETUP
 tf.random.set_seed(pp.RANDOM_STATE)
@@ -25,6 +27,13 @@ NUM_FEATURES = pp.total_features()  # amount of fields in the input
 LABELS = pp.labels()  # All labels and their total items in them
 SEQUENCE_LENGTH = pp.SEQUENCE_LENGTH
 loss_function = CategoricalCrossentropy
+
+# index = 1
+# t_train = t_train[index]
+# t_test = t_test[index]
+# t_val = t_val[index]
+# LABELS = [LABELS[index]]
+
 
 # MODEL BUILDING FUNCTION
 def build_model(hyperparams=None, plot_model_arch=False):
@@ -50,9 +59,9 @@ def build_model(hyperparams=None, plot_model_arch=False):
 
     # TODO: set compiler variables
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0008),
-        loss=keras.losses.CategoricalCrossentropy(from_logits=False),
-        metrics=[tf.keras.metrics.CategoricalAccuracy()]
+        loss=CategoricalCrossentropy(from_logits=False),
+        optimizer=keras.optimizers.Adam(learning_rate=0.0008),  # tunable
+        metrics=[CategoricalAccuracy()],
     )
     return model
 
@@ -61,16 +70,28 @@ def build_model(hyperparams=None, plot_model_arch=False):
 
 # MODEL TRAINING
 model = build_model(plot_model_arch=True)
-testing = model.fit(x_train, t_train, batch_size=128, epochs=100, validation_data=(x_val, t_val), verbose=2)
+testing = model.fit(
+    x_train,
+    t_train,
+    batch_size=64,
+    epochs=100,
+    validation_data=(x_val, t_val),
+    verbose=2,
+)
 
 # MODEL TESTING
 test_metric_names = model.metrics_names
+print(time.process_time() - starttime)
+starttime = time.process_time()
+
 test_scores = model.evaluate(x_test, t_test, verbose=0)
+print("time 2: " + str(time.process_time() - starttime))
 rnn_results = model.predict(x_test, verbose=0)
 
 plt.plot(testing.history['loss'])
 plt.plot(testing.history['val_loss'])
 plt.show()
+
 
 for idx, score in enumerate(test_scores):
     print(test_metric_names[idx], ": ", score)
