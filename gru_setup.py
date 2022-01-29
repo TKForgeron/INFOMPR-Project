@@ -61,7 +61,7 @@ def build_model(hyperparams=None, plot_model_arch=False):
     model.compile(
         loss=CategoricalCrossentropy(from_logits=False),
         optimizer=keras.optimizers.Adam(learning_rate=0.0008),  # tunable
-        metrics=[CategoricalAccuracy()],
+        metrics=[tf.keras.metrics.CategoricalAccuracy(), tf.keras.metrics.Precision(), tf.keras.metrics.Recall()],
     )
     return model
 
@@ -81,17 +81,15 @@ testing = model.fit(
 
 # MODEL TESTING
 test_metric_names = model.metrics_names
-print(time.process_time() - starttime)
-starttime = time.process_time()
+
 
 test_scores = model.evaluate(x_test, t_test, verbose=0)
-print("time 2: " + str(time.process_time() - starttime))
 rnn_results = model.predict(x_test, verbose=0)
 
 plt.plot(testing.history['loss'])
 plt.plot(testing.history['val_loss'])
 plt.show()
-
+print(time.process_time() - starttime)
 
 for idx, score in enumerate(test_scores):
     print(test_metric_names[idx], ": ", score)

@@ -58,7 +58,7 @@ def create_convolutional_layer(filters, kernel_size):
         data_format="channels_last",
         dilation_rate=1,
         groups=1,
-        activation="sigmoid",
+        activation="relu",
         use_bias=True,
         kernel_initializer="glorot_uniform",
         bias_initializer="zeros",

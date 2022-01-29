@@ -73,11 +73,11 @@ for i in np.arange (0.008, 0.009, 0.001):
     # TODO: tune the parameters of all layers below, note: include parameters from "Network Traffic Classifier With Convolutional and Recurrent Neural Networks for Internet of Things"
     # data_format = channels_last corresponds to inputs with shape (batch_size, height, width, channels) while channels_first corresponds to inputs with shape (batch_size, channels, height, width)
    
-    conv = create_convolutional_layer(32, kernel_size=(2,4))(reshape)  
+    conv = create_convolutional_layer(32, kernel_size=(2,3))(reshape)  
     pool = create_max_pool_layer(pool_size=(2, 3))(conv)
     bn = create_batch_normalisation_layer()(pool)
 
-    conv = create_convolutional_layer(64, kernel_size=(2,4))(bn)
+    conv = create_convolutional_layer(64, kernel_size=(2,3))(bn)
     pool = create_max_pool_layer(pool_size=(2, 3))(conv)
     bn = create_batch_normalisation_layer()(pool)
 
@@ -103,9 +103,9 @@ for i in np.arange (0.008, 0.009, 0.001):
     
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.00006),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.00002),
         loss=keras.losses.CategoricalCrossentropy(from_logits=False),
-        metrics=[tf.keras.metrics.CategoricalAccuracy()],
+        metrics=[tf.keras.metrics.CategoricalAccuracy(), tf.keras.metrics.Precision(), tf.keras.metrics.Recall()],
     )
 
         # TODO: tune parameters
@@ -129,11 +129,12 @@ for i in np.arange (0.008, 0.009, 0.001):
 
     cnn_app_results = model.predict(x_test, verbose=0)
     
+    
 
+   
     plt.plot(testing.history['loss'])
     plt.plot(testing.history['val_loss'])
     plt.show()
-    print("CNN type")
     print(time.process_time() - starttime)
   
     for idx, score in enumerate(test_scores):
