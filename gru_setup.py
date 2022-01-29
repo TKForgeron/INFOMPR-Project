@@ -11,6 +11,7 @@ from keras.metrics import CategoricalAccuracy
 from nn_layers import *
 from matplotlib import pyplot as plt
 import time
+
 starttime = time.process_time()
 
 # BASIC SETUP
@@ -54,14 +55,18 @@ def build_model(hyperparams=None, plot_model_arch=False):
     model = keras.Model(inputs=input_layer, outputs=outputs)
     model.summary()
 
-    # if plot_model_arch:
-    #     keras.utils.plot_model(model, "results/GRU_model_arch.png", show_shapes=True)
+    if plot_model_arch:
+        keras.utils.plot_model(model, "results/GRU_model_arch.png", show_shapes=True)
 
     # TODO: set compiler variables
     model.compile(
         loss=CategoricalCrossentropy(from_logits=False),
         optimizer=keras.optimizers.Adam(learning_rate=0.0008),  # tunable
-        metrics=[tf.keras.metrics.CategoricalAccuracy(), tf.keras.metrics.Precision(), tf.keras.metrics.Recall()],
+        metrics=[
+            tf.keras.metrics.CategoricalAccuracy(),
+            tf.keras.metrics.Precision(),
+            tf.keras.metrics.Recall(),
+        ],
     )
     return model
 
